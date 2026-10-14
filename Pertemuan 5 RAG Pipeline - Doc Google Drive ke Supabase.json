@@ -1,0 +1,199 @@
+{
+  "name": "Tugas 5 - RAG Pipeline Google Docs ke Supabase",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "8310ac39-d9c6-4f73-8165-531e600f24cb",
+      "name": "Klik untuk Menjalankan",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "https://docs.google.com/document/d/13DKXZf7HA6jxwTkaeeSgDIj3iYk2dFCC_VfS0ggl8KI/edit?usp=sharing",
+          "mode": "url"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "application/pdf"
+            }
+          }
+        }
+      },
+      "id": "052a3070-43ed-4ec1-91f9-33db203bae76",
+      "name": "Download Google Docs dari Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        224,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "32tMxDPmXtJY4mX7",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents_skripsi",
+          "mode": "id"
+        },
+        "options": {
+          "queryName": "match_documents_skripsi"
+        }
+      },
+      "id": "511013e9-94a7-477c-b059-aa0fa1ceae18",
+      "name": "Simpan ke Supabase Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Tcv1mKCBTpPabK0r",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "804310dd-2405-42c5-bcfd-71182c2e8f5f",
+      "name": "Embeddings Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        456,
+        232
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "v3yn8imcq9Tsoh3l",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "sumber",
+                "value": "Panduan Penulisan Ilmiah Tugas Akhir Skripsi"
+              }
+            ]
+          }
+        }
+      },
+      "id": "f1721543-1e29-4d1f-bb0a-788cc864f803",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        584,
+        232
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "id": "8b5f8680-e23e-497e-bb64-4b2aeb6865f6",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        664,
+        440
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Klik untuk Menjalankan": {
+      "main": [
+        [
+          {
+            "node": "Download Google Docs dari Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Google Docs dari Drive": {
+      "main": [
+        [
+          {
+            "node": "Simpan ke Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simpan ke Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Simpan ke Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d8af5986-0610-4f35-b357-ccadb5cdb6e9",
+  "meta": {
+    "instanceId": "dc96f10ae7dc95d3c138575ba243a0a167923dbcb524841d451aadf9135d5fb3"
+  },
+  "nodeGroups": [],
+  "id": "S2lqLy6Wfsncgrex",
+  "tags": []
+}
